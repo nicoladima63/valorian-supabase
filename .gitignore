@@ -33,3 +33,4 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+/.vs/valorian/FileContentIndex/77b235ff-4a6f-472a-add4-9b8f9a202bcc.vsidx
