@@ -1,0 +1,16 @@
+// generated from template
+
+import React from 'react';
+import {View, Text} from 'react-native';
+import use${name}ViewModel from './${name}ViewModel';
+import {${name}Styles} from './${name}Style';
+
+export default function ${name}View(navigation) {
+  const {loading, setLoading} = use${name}ViewModel({navigation});
+
+  return (
+    <View style={${name}Styles.container}>
+      <Text>Welcome to ${name}View </Text>
+    </View>
+  );
+}

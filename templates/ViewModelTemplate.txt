@@ -1,0 +1,15 @@
+// generated from template
+
+import {useState, useEffect} from 'react';
+import ${name}Model from './${name}Model';
+
+export default function use${name}ViewModel({ navigation }) {
+  const [loading, setLoading] = useState(${name}Model.loading);
+
+  useEffect(() => {
+    // component Initialization 
+  }, []);
+
+
+  return {loading, setLoading};
+}

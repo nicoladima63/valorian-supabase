@@ -1,73 +1,66 @@
-//WelcomePage.js
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { View, Text, Button, StyleSheet } from 'react-native';
-
+ï»¿import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase'; // Import Supabase client
+import { View, Text,  StyleSheet, Pressable } from 'react-native';
+import Background from '../components/Background';
+import {
+    TextContentJustify,
+    SubHeaderAlert,
+    SubHeaderAlertText,
+    ButtonContainerSE,
+    Button, Title16, Title20, Container
+} from '../styledComponents';
+import { buttonColors } from '../constants/buttonColors'
 const WelcomePage = ({ navigation }) => {
-    console.log(supabase.auth);
-    const [loading, setLoading] = useState(false)
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [session, setSession] = useState(null);
 
-    // Controlla lo stato dell'autenticazione all'avvio del componente
     useEffect(() => {
-        const session = supabase.auth.getSession();
-        if (session) {
-            // Se c'è una sessione attiva, l'utente è già autenticato, quindi reindirizza alla Home
-            navigation.replace('Home');
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+        })
+        if (session && session.user) {
+            setIsAuthenticated(true);
         } else {
-            // Altrimenti, l'utente non è autenticato
             setIsAuthenticated(false);
-            navigation.replace('Login');
-
         }
-    }, []);
-    const handleGetStarted = () => {
-        navigation.push('Register'); // Vai alla pagina di login
+    }, [])
+
+    const handleGetStarted = (isNewUser) => {
+        navigation.navigate('Auth', { isNewUser });
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Benvenuto nella nostra App!</Text>
-
-            <Text style={styles.description}>Spiegazione della app...</Text>
-            <View style={[styles.verticallySpaced, styles.mt20]}>
-                <Button style={styles.input} title="Registrati" onPress={handleGetStarted} />
+        <Background>
+            <SubHeaderAlert>
+                <SubHeaderAlertText>
+                    {isAuthenticated ? 'Autenticato' : 'Non autenticato'}
+                </SubHeaderAlertText>
+            </SubHeaderAlert>
+            {/* Header */}
+            <View style={styles.header}>
+                <Title20>
+                    Benvenuto in VALORIAN
+                </Title20>
             </View>
-
-        </View>
+            {/* Contenuto centrale */}
+            <Container>
+                <TextContentJustify>
+                    Spiegazione della app...
+                    {session && session.user && <Text>{session.user.id}</Text>}
+                </TextContentJustify>
+            </Container>
+            {/* Pulsanti in fondo */}
+            <ButtonContainerSE>
+                <Button bgColor={buttonColors.primary} onPress={() => handleGetStarted(true)}>
+                    <Title16>Nuovo Account</Title16>
+                </Button>
+                <Button bgColor={buttonColors.primary} onPress={() => handleGetStarted(false)}>
+                    <Title16>Login</Title16>
+                </Button>
+            </ButtonContainerSE>
+        </Background>
     );
 };
 
 export default WelcomePage;
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 40,
-        padding: 12,
-        backgroundColor: '#fff',
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 16,
-    },
-    description: {
-        fontSize: 16,
-        textAlign: 'center',
-        marginBottom: 12,
-    },
-    verticallySpaced: {
-        paddingTop: 16,
-        paddingBottom: 16,
-        alignSelf: 'stretch',
-    },
-    mt20: {
-        marginTop: 20,
-    },
-    input: {
-        height: 80,
-    },
-});
