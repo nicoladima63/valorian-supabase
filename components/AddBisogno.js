@@ -136,6 +136,7 @@ const AddBisogno = ({ visible, onClose, onAdd, userId, isTestPhase }) => {
     };
 
     const associaBisInCat = () => {
+        //jfgrjhfgrhjfgr
         const isCategorySelected = selectedCategories.includes(category);
         try {
             // Rimuovi l'associazione precedente per questa categoria
