@@ -1,30 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, StatusBar } from 'react-native';
-import { Avatar } from 'react-native-elements';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { supabase } from '../lib/supabase';
+
+import { TouchableOpacity, View, Text } from 'react-native';
+import { Avatar, Icon } from 'react-native-elements';
 import { useNavigationState } from '@react-navigation/native';
-import { supabase } from '../lib/supabase'; // Importa il client Supabase
-import {
-    TopBarContainer,
-    TopBarTitle,
-    TopBarAvatarContainer,
-    TopBarIcon,
-} from '../styledComponents';
 
 const TopBar = ({ navigation }) => {
     const { toggleTheme, theme } = useTheme();
     const routeName = useNavigationState(state => state.routes[state.index].name);
+    const { session } = useAuth();
     const [avatarUrl, setAvatarUrl] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        fetchProfile();
-        if (avatarUrl) downloadImage(avatarUrl)
+        if (session) {
+            fetchProfile();
+        }
+    }, [session]);
 
+    useEffect(() => {
+        if (avatarUrl) {
+            downloadImage(avatarUrl);
+        }
     }, [avatarUrl]);
 
     const fetchProfile = async () => {
-        const { data: { session }, error } = await supabase.auth.getSession();
         try {
+            setLoading(true);
             const { data, error } = await supabase
                 .from('profiles')
                 .select('avatar_url')
@@ -39,53 +43,54 @@ const TopBar = ({ navigation }) => {
                 setAvatarUrl(data.avatar_url);
             }
         } catch (error) {
-            console.error('Error fetching profile:', error.message);
+            //console.error('TopBar Error fetching profile:', error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
-    async function downloadImage(path) {
+    const downloadImage = async (path) => {
         try {
-            const { data, error } = await supabase.storage.from('avatars').download(path)
+            //console.log('Downloading image from path:', path);
+            const { data, error } = await supabase.storage
+                .from('avatars')
+                .download(path);
 
             if (error) {
-                throw error
+                throw error;
             }
 
-            const fr = new FileReader()
-            fr.readAsDataURL(data)
+            if (!data) {
+                //console.error('TopBar Error downloading image: Data is null');
+                return;
+            }
+
+            const fr = new FileReader();
             fr.onload = () => {
-                setAvatarUrl(fr.result)
-            }
+                setAvatarUrl(fr.result);
+                //console.log('Image successfully read:', fr.result);
+            };
+            fr.onerror = (err) => {
+                //console.error('TopBar Error reading file:', err);
+            };
+            fr.readAsDataURL(data);
         } catch (error) {
-            if (error instanceof Error) {
-                console.log('Error downloading image: ', error.message)
-            }
+            //console.error('TopBar Error downloading image:', error.message);
         }
-    }
+    };
 
     return (
-        <TopBarContainer>
-            <StatusBar barStyle={theme.statusBarStyle} />
-            <TopBarAvatarContainer onPress={() => navigation.navigate('Profile')}>
-                {avatarUrl ? (
-                    <Avatar
-                        rounded
-                        source={{ uri: avatarUrl }}
-                        size="small"
-                    />
-                ) : (
-                    <Avatar
-                        rounded
-                        source={require('../assets/icon.png')} // Immagine predefinita nel caso in cui non ci sia un avatar caricato
-                        size="small"
-                    />
-                )}
-            </TopBarAvatarContainer>
-            <TopBarTitle>{routeName}</TopBarTitle>
-            <TouchableOpacity onPress={toggleTheme}>
-                <TopBarIcon name='refresh' type='font-awesome' />
+        <View style={theme.topBarContainer}>
+
+            <Text style={theme.title}>{routeName}</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Account')}>
+                <Avatar
+                    rounded
+                    source={avatarUrl ? { uri: avatarUrl } : require('../assets/icon.png')}
+                    size="small"
+                />
             </TouchableOpacity>
-        </TopBarContainer>
+        </View>
     );
 };
 

@@ -1,19 +1,21 @@
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import HomePage from '../screens/HomePage';
-import Settings from '../screens/Settings';
-import Profile from '../screens/Profile';
+import HomeScreen from '../screens/HomeScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import Bisogni from '../screens/BisogniList';
 import Calendar from '../screens/Calendario';
-import Account from '../screens/Account';
+import Associazione from '../screens/Associazione';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useTheme } from '../context/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 
 export const Tabs = () => {
-    // Access session from current tab's params
     const navigation = useNavigation();
+    const { theme } = useTheme();
+
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
@@ -24,25 +26,29 @@ export const Tabs = () => {
                         iconName = focused ? 'ios-home' : 'ios-home-outline';
                     } else if (route.name === 'Settings') {
                         iconName = focused ? 'ios-settings' : 'ios-settings-outline';
-                    } else if (route.name === 'Profile') {
+                    } else if (route.name === 'Account') {
                         iconName = focused ? 'ios-person' : 'ios-person-outline';
+                    } else if (route.name === 'Bisogni List') {
+                        iconName = focused ? 'ios-list' : 'ios-list-outline';
+                    } else if (route.name === 'Calendario') {
+                        iconName = focused ? 'ios-calendar' : 'ios-calendar-outline';
                     }
 
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
-                tabBarActiveTintColor: '#d42fc2',
-                tabBarInactiveTintColor: 'gray',
+                tabBarActiveTintColor: theme.colors.primary,
+                tabBarInactiveTintColor: theme.colors.inactive,
                 tabBarLabelStyle: { fontSize: 12 },
-                tabBarStyle: { backgroundColor: '#181d23', height: 55, borderTopColor: '#2b3038' },
+                tabBarStyle: { backgroundColor: theme.colors.background, height: 55, borderTopColor: theme.colors.border },
             })}
         >
             <Tab.Screen
-                name="Main"
-                component={HomePage}
+                name="Home"
+                component={HomeScreen}
                 options={{
                     tabBarLabel: 'Home',
                     headerShown: false,
-                    tabBarIcon: ({ color }) => <FontAwesome size={20} name="home" color={color} />,
+                    tabBarIcon: ({ color, size }) => <FontAwesome name="home" size={size} color={color} />,
                     tabBarLabelStyle: { marginBottom: 8 }
                 }}
             />
@@ -52,28 +58,37 @@ export const Tabs = () => {
                 options={{
                     tabBarLabel: 'Calendario',
                     headerShown: false,
-                    tabBarIcon: ({ color }) => <FontAwesome size={20} name="calendar" color={color} />,
+                    tabBarIcon: ({ color, size }) => <FontAwesome name="calendar" size={size} color={color} />,
                     tabBarLabelStyle: { marginBottom: 8 }
                 }}
             />
             <Tab.Screen
-                name="Account"
-                component={Account}
+                name="Associazione"
+                component={Associazione}
                 options={{
-                    tabBarLabel: 'Account',
+                    tabBarLabel: 'Associazione',
                     headerShown: false,
-                    tabBarIcon: ({ color }) => <FontAwesome size={20} name="user" color={color} />,
+                    tabBarIcon: ({ color, size }) => <FontAwesome name="users" size={size} color={color} />,
                     tabBarLabelStyle: { marginBottom: 8 }
                 }}
             />
-
+            <Tab.Screen
+                name="Gestione Bisogni"
+                component={Bisogni}
+                options={{
+                    tabBarLabel: 'Gestione Bisogni',
+                    headerShown: false,
+                    tabBarIcon: ({ color, size }) => <FontAwesome name="list" size={size} color={color} />,
+                    tabBarLabelStyle: { marginBottom: 8 }
+                }}
+            />
             <Tab.Screen
                 name="Settings"
-                component={Settings}
+                component={SettingsScreen}
                 options={{
                     tabBarLabel: 'Settings',
                     headerShown: false,
-                    tabBarIcon: ({ color }) => <FontAwesome size={20} name="cog" color={color} />,
+                    tabBarIcon: ({ color, size }) => <FontAwesome name="cog" size={size} color={color} />,
                     tabBarLabelStyle: { marginBottom: 8 }
                 }}
             />

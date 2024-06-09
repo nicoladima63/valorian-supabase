@@ -56,16 +56,39 @@ export const LightTheme = {
         alignSelf: 'left',
         marginRight: 20,
     },
-    item: {
-        backgroundColor: '#aeaeae',
+    item2: {
+        backgroundColor: '#dedede',
         padding: 8,
-        marginVertical: 8,
+        marginVertical: 2,
         marginHorizontal: 18,
-        flexDirection: 'row',
-        alignItems: 'center',
+        //flexDirection: 'row',
+        //alignItems: 'center',
         borderRadius: 8,
         borderBlockColor: '#3b414a',
         borderWidth: 1,
+        width: 100,
+        justifyContent: 'space-between',
+        flexDirection: 'row',
+        alignItems: 'left',
+    },
+    itemContainer: {
+        marginHorizontal: "auto",
+        //width: '100%'
+        padding: 10,
+    },
+    item: {
+        flex: 1,
+        minWidth: 150,
+        maxWidth: 150,
+        height: 150,
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: 10,
+        // my visual styles; not important for grid
+        padding: 20,
+        //backgroundColor: "rgba(249, 180, 45, 0.25)",
+        //borderWidth: 1.5,
+        borderColor: "#fff"
     },
     itemText: {
         flex: 1,
@@ -74,17 +97,17 @@ export const LightTheme = {
         fontWeight: '500',
     },
     itemAvatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#21262d',
+        width: 120,
+        height: 120,
+        borderRadius: 50,
+        backgroundColor: '#dedede',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
         marginLeft: 10,
     },
     itemAvatarText: {
-        fontSize: 20,
+        fontSize: 10,
         color: '#fff',
     },
     //topBar

@@ -1,21 +1,22 @@
 // src/context/ThemeContext.js
 import React, { createContext, useState, useContext } from 'react';
-import { ThemeProvider as StyledThemeProvider } from 'styled-components/native';
-import { LightTheme, DarkTheme } from '../themes';
+import DefaultTheme from '../themes/DefaultTheme';
+import DarkTheme from '../themes/DarkTheme';
 
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-    const [theme, setTheme] = useState(LightTheme);
+    const [theme, setTheme] = useState(DefaultTheme);
 
     const toggleTheme = () => {
-        setTheme(theme === LightTheme ? DarkTheme : LightTheme);
+        setTheme(theme === DefaultTheme ? DarkTheme : DefaultTheme);
     };
 
     return (
         <ThemeContext.Provider value={{ theme, toggleTheme }}>
-            <StyledThemeProvider theme={theme}>{children}</StyledThemeProvider>
+            {children}
         </ThemeContext.Provider>
     );
 };
+
 export const useTheme = () => useContext(ThemeContext);

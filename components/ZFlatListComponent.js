@@ -1,49 +1,40 @@
-import React, { useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
-import { RefreshControl, StyleSheet, View, StatusBar, FlatList, Text, Switch, Alert, Pressable, Dimensions, ActivityIndicator, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, StatusBar, FlatList, Text, Switch, Alert, Pressable, Dimensions, ActivityIndicator } from "react-native";
 import { ButtonGroup } from '@rneui/themed';
 import { supabase } from '../lib/supabase';
 import AddBisogno from '../components/AddBisogno';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import Snackbar from '../components/Snackbar';
-import ElevatedView from 'react-native-elevated-view';
+//import { ProgressCircle } from 'react-native-svg-charts';
 
 const numColumns = 3;
 const WIDTH = Dimensions.get('window').width;
 
-const FlatListComponent = forwardRef(({ navigation, session }, ref) => {
+const FlatListComponent = () => {
     const [enabledStates, setEnabledStates] = useState({});
     const [selectedIndex, setSelectedIndex] = useState(1);
     const [modalVisible, setModalVisible] = useState(false);
-    const [user, setUser] = useState({});
+    const [user, setUser] = useState(null);
     const [bisogni, setBisogni] = useState([]);
     const [snackbarVisible, setSnackbarVisible] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-
-    useImperativeHandle(ref, () => ({
-        handleAddNeed
-    }));
-
-    const onRefresh = useCallback(() => {
-        setRefreshing(true);
-        // Inserisci la tua logica di ricaricamento dei dati qui.
-        // Dopo aver completato il ricaricamento, imposta refreshing a false.
-        fetchBisogni().then(() => {
-            setRefreshing(false);
-        });
-    }, []);
 
     useEffect(() => {
         fetchUserData();
-        fetchBisogni();
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            fetchBisogni();
+        }
+    }, [user]);
 
     useEffect(() => {
         if (bisogni.length > 0) {
             setEnabledStates(bisogni.reduce((acc, item) => ({ ...acc, [item.id]: item.enabled }), {}));
         }
         setLoading(false);
-
     }, [bisogni]);
 
     const fetchUserData = async () => {
@@ -52,6 +43,8 @@ const FlatListComponent = forwardRef(({ navigation, session }, ref) => {
             setUser(user);
         } catch (error) {
             console.error('Failed to fetch user data', error);
+            Alert.alert('Errore', 'Errore nel recupero dei dati utente.');
+            setLoading(false);
         }
     };
 
@@ -60,17 +53,14 @@ const FlatListComponent = forwardRef(({ navigation, session }, ref) => {
             const { data, error } = await supabase
                 .from('bisogni')
                 .select('*')
-                .eq('uuid', session.user.id);
+                .eq('uuid', user.id);
             if (error) {
-                console.error('Error object:', error);
                 throw error;
             }
             setBisogni(data);
         } catch (error) {
-            console.error('Errore nel recupero dei bisogni:', error);
+            console.error('Errore nel recupero dei bisogni', error);
             Alert.alert('Errore', 'Errore nel recupero dei bisogni.');
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -89,13 +79,13 @@ const FlatListComponent = forwardRef(({ navigation, session }, ref) => {
 
             if (error) {
                 console.error('Errore durante l\'aggiornamento:', error);
-                Alert.alert('Errore durante l\'aggiornamento');
+                Alert.alert('Errore', 'Errore durante l\'aggiornamento');
             } else {
                 console.log('Record aggiornato:', data);
             }
         } catch (error) {
             console.error('Errore durante l\'aggiornamento:', error);
-            Alert.alert('Errore durante l\'aggiornamento');
+            Alert.alert('Errore', 'Errore durante l\'aggiornamento');
         }
     };
 
@@ -120,7 +110,7 @@ const FlatListComponent = forwardRef(({ navigation, session }, ref) => {
     };
 
     const onPress = async (id, nome) => {
-        if (!user.id) {
+        if (!user?.id) {
             Alert.alert('Errore', 'Utente non trovato');
             return;
         }
@@ -135,40 +125,51 @@ const FlatListComponent = forwardRef(({ navigation, session }, ref) => {
 
             if (error) {
                 console.error('Errore durante l\'aggiornamento:', error);
-                Alert.alert('Errore durante l\'aggiornamento');
+                Alert.alert('Errore', 'Errore durante l\'aggiornamento');
             } else {
                 setSnackbarMessage(`Bisogno "${nome}" aggiornato`);
                 setSnackbarVisible(true);
             }
         } catch (error) {
             console.error('Errore durante l\'aggiornamento:', error);
-            Alert.alert('Errore durante l\'aggiornamento');
+            Alert.alert('Errore', 'Errore durante l\'aggiornamento');
         }
     };
+
+    const CustomButton = ({ title, onPress }) => (
+        <Pressable onPress={onPress} style={styles.button}>
+            <Icon name="plus" size={20} color="#fff" style={styles.icon} />
+            <Text style={styles.buttonText}>{title}</Text>
+        </Pressable>
+    );
 
     const Item = ({ nome, isEnabled, toggleSwitch, onPress, empty }) => {
         if (empty) {
             return <View style={[styles.item, styles.itemInvisible]} />;
         }
         return (
-            <ElevatedView elevation={4} style={styles.stayElevated}>
-
-                <View style={[styles.item, !isEnabled && styles.itemDisabled]}>
-                    <Pressable onPress={onPress} style={styles.topSection}>
-                        <Text style={styles.text}>{nome}</Text>
-                    </Pressable>
-                    <View style={styles.divider} />
-                    <View style={styles.bottomSection}>
-                        <Switch
-                            onValueChange={toggleSwitch}
-                            trackColor={{ false: '#767577', true: '#81b0ff' }}
-                            thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
-                            ios_backgroundColor="#3e3e3e"
-                            value={isEnabled}
-                        />
-                    </View>
+            <View style={[styles.item, !isEnabled && styles.itemDisabled]}>
+                <Pressable onPress={onPress} style={styles.topSection}>
+                    {/*<ProgressCircle*/}
+                    {/*    style={styles.progressCircle}*/}
+                    {/*    progress={0.5}*/}
+                    {/*    progressColor={'#800080'}*/}
+                    {/*    startAngle={-90}*/}
+                    {/*    endAngle={90}*/}
+                    {/*/>*/}
+                    <Text style={styles.text}>{nome}</Text>
+                </Pressable>
+                <View style={styles.divider} />
+                <View style={styles.bottomSection}>
+                    <Switch
+                        onValueChange={toggleSwitch}
+                        trackColor={{ false: '#767577', true: '#81b0ff' }}
+                        thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
+                        ios_backgroundColor="#3e3e3e"
+                        value={isEnabled}
+                    />
                 </View>
-            </ElevatedView>
+            </View>
         );
     };
 
@@ -190,9 +191,8 @@ const FlatListComponent = forwardRef(({ navigation, session }, ref) => {
         );
     }
 
-
     return (
-        <View>
+        <View style={styles.content}>
             <ButtonGroup
                 buttons={['Tutti', 'Abilitati', 'Disabilitati']}
                 selectedIndex={selectedIndex}
@@ -206,11 +206,11 @@ const FlatListComponent = forwardRef(({ navigation, session }, ref) => {
                 buttonContainerStyle={{ backgroundColor: '#600080' }}
             />
 
-
             <FlatList
-                data={formatData(filterData(), numColumns)}
-                numColumns={numColumns}
-                renderItem={({ item, index }) => (
+                //data={formatData(filterData(), numColumns)}
+                data={filterData()}
+                //numColumns={numColumns}
+                renderItem={({ item }) => (
                     <Item
                         key={item.id}
                         nome={item.nome}
@@ -218,77 +218,61 @@ const FlatListComponent = forwardRef(({ navigation, session }, ref) => {
                         onPress={() => onPress(item.id, item.nome)}
                         isEnabled={enabledStates[item.id]}
                         toggleSwitch={() => toggleSwitch(item.id)}
-                        index={index}
                         empty={item.empty}
                     />
                 )}
                 keyExtractor={item => item.id.toString()}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                    />
-                }
             />
+
+            <View style={styles.container}>
+                <CustomButton title="Bisogno" onPress={handleAddNeed} />
+            </View>
 
             <AddBisogno
                 visible={modalVisible}
                 onClose={handleModalClose}
                 onAdd={fetchBisogni}
-                userId={session.user.id}
+                userId={user.id}
             />
             <Snackbar
                 isVisible={snackbarVisible}
                 message={snackbarMessage}
-                //actionText="aggiornato"
+                actionText="Dismiss"
                 duration={2500}
                 position="top"
-                backgroundColor="#00c65c"
+                backgroundColor="#f3d500"
                 textColor="black"
                 actionTextColor="white"
                 containerStyle={{ marginHorizontal: 12 }}
-                messageStyle={{ alignSelf: "center", textAlign: "center" }}
-                actionTextStyle={{}}
+                messageStyle={{ alignSelf: "center" }}
                 onDismiss={() => setSnackbarVisible(false)}
             />
         </View>
     );
-});
+};
 
 const styles = StyleSheet.create({
-    fab: {
-        position: 'absolute',
-        margin: 16,
-        right: 0,
-        bottom: 0,
-        zIndex: 1
-    },
-    stayElevated: {
-        //width: 120,
-        //height: 120,
-        margin: 4,
-        backgroundColor: 'white',
-        borderRadius: 4,
-        height: WIDTH / numColumns - 25,
-        width: WIDTH / numColumns - 25,
-        flex: 1
-    },
     container: {
         flex: 1,
         marginTop: StatusBar.currentHeight || 0,
     },
     item: {
-        margin: 0,
+        backgroundColor: '#800080',
+        padding: 4,
+        margin: 2,
+        justifyContent: 'center',
+        borderRadius: 2,
+        borderColor: '#300080',
+        borderWidth: 1,
         flex: 1,
-        // Subtract margin to keep square shape
-
+        height: WIDTH / numColumns - 10,
     },
     itemInvisible: {
         backgroundColor: 'transparent',
         borderWidth: 0,
     },
     itemDisabled: {
-        backgroundColor: 'rgba(128, 0, 128, 0.4)', // More transparent background for disabled items
+        backgroundColor: 'rgba(128, 0, 128, 0.4)',
     },
     content: {
         flex: 1,
@@ -303,26 +287,22 @@ const styles = StyleSheet.create({
     },
     text: {
         fontSize: 18,
-        color: '#101010',
+        color: '#ddd',
         fontWeight: '500',
     },
     button: {
+        flexDirection: 'row',
         height: 50,
-        width: '80%',
+        width: 250,
         backgroundColor: '#800080',
-        //justifyContent: 'center',
-        //alignItems: 'center',
-        borderRadius: 4,
-        //alignSelf: 'center',
-        //marginTop: 20,
-        //padding: 15,
-        backgroundColor: '#3ca9d7',
-        //borderRadius: 5,
+        justifyContent: 'center',
         alignItems: 'center',
+        borderRadius: 4,
+        alignSelf: 'center',
     },
     buttonText: {
-        color: 'white',
-        fontSize: 16,
+        color: '#FFFFFF',
+        fontSize: 18,
     },
     icon: {
         marginRight: 10,
@@ -342,31 +322,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#ddd',
         marginVertical: 5,
     },
-    button: {
-        marginTop: 20,
-        padding: 15,
-        backgroundColor: '#3ca9d7',
-        borderRadius: 5,
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
         alignItems: 'center',
-        position: 'bottom',
     },
-    buttonText: {
-        color: 'white',
-        fontSize: 16,
-    },
-    floating: {
-        position: 'fixed',
-        width: 60,
-        bottom: 0,
-        right: 0,
-        backgroundColor: '#800080',
-        color: '#fff',
-        borderRadius: 50,
-        textAlign: 'center',
-        fontSize: 30,
-        boxSshadow: '2px 2px 3px #999',
-        zIndex: 1,
-    }
 });
 
 export default FlatListComponent;

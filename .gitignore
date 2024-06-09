@@ -40,3 +40,4 @@ yarn-error.*
 expo-env.d.ts
 # @end expo-cli
 /.vs/valorian-supabase/FileContentIndex
+/.vs/valorian-supabase-mio/FileContentIndex

@@ -1,8 +1,15 @@
 {
   "ExpandedNodes": [
     "",
-    "\\components"
+    "\\assets",
+    "\\components",
+    "\\constants",
+    "\\context",
+    "\\navigation",
+    "\\screens",
+    "\\styledComponents",
+    "\\themes"
   ],
-  "SelectedNode": "\\components\\ErrorPage.js",
+  "SelectedNode": "\\screens\\HomePage.js",
   "PreviewInSolutionExplorer": false
 }

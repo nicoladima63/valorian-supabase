@@ -1,26 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from "../lib/supabase"; // Import Supabase client
+import { useTheme } from '../context/ThemeContext';
+
 import Layout from './Layout';
 import Avatar from "./Avatar";
 import {
     StyleSheet,
     View,
-    Alert,
-    Text, ActivityIndicator
+    Alert, Button,
+    Text, ActivityIndicator, TextInput
 } from "react-native";
-import { Input } from '@rneui/themed';
-import {
-    ButtonContainerSE,
-    Button, Title16
-} from '../styledComponents';
-import { buttonColors } from '../constants/buttonColors';
 
-export default function Account() {
+export default function AccountScreen() {
     const navigation = useNavigation();
     const [session, setSession] = useState(null);
     const [user, setUser] = useState(null); // Store user data
     const [loading, setLoading] = useState(true); // Loading state
+    const { theme } = useTheme();
 
     const [username, setUsername] = useState(""); // Username state
     const [website, setWebsite] = useState(""); // Website state
@@ -93,48 +90,77 @@ export default function Account() {
     };
 
     return (
-        <Layout navigation={navigation}>
+        <>
             {loading ? (
-                <View style={styles.container}>
+                <View style={theme.container}>
                     <Text style={{ color: 'red', textAlign: 'center' }}>Loading...</Text>
                     <ActivityIndicator size="large" />
                 </View>
             ) : (
-                <View style={styles.container}>
+
+                <View style={theme.container}>
+
+                    <Text style={{
+                        color: theme.colors.text,
+                        fontSize: 18,
+                        fontWeight: '600',
+                        marginBottom: 16,
+                            marginTop: 16,
+                        alignSelf: 'center',
+                    }}>
+                        Bentornato, {username}
+                    </Text>
+
                     <View style={[styles.verticallySpaced, styles.mt20]}>
-                        <Text>{user?.email}</Text>
+                        <TextInput
+                            label="Email"
+                            value={session?.user?.email}
+                            editable={false}
+                            style={styles.input}
+                        />
                     </View>
-                    <View style={styles.verticallySpaced}>
-                        <Input
+                    <View style={[styles.verticallySpaced, styles.mt20]}>
+                        <TextInput
+                            style={styles.input}
                             label="Username"
                             value={username}
                             onChangeText={(text) => setUsername(text)}
                         />
                     </View>
-                    <View style={styles.verticallySpaced}>
-                        <Input
+                    <View style={[styles.verticallySpaced, styles.mt20]}>
+                        <TextInput
+                            style={styles.input}
                             label="Website"
                             value={website}
                             onChangeText={(text) => setWebsite(text)}
                         />
                     </View>
-                    <View>
-                        <Avatar size={100} url={avatarUrl} onUpload={(url) => {
-                            setAvatarUrl(url);
-                            updateProfile({ username, website, avatar_url: url });
-                        }} />
+                    <View style={[styles.verticallySpaced, styles.mt20]}>
+                        <Avatar
+                            size={80}
+                            url={avatarUrl}
+                            onUpload={(url) => {
+                                setAvatarUrl(url);
+                                updateProfile({ username, website, avatar_url: url });
+                            }}
+                        />
                     </View>
-                    <ButtonContainerSE>
-                            <Button bgColor='primary' onPress={() => updateProfile({ username, website, avatar_url: avatarUrl })}>
-                            <Title16>{loading ? "Loading ..." : "Update"}</Title16>
-                        </Button>
-                        <Button bgColor='danger' onPress={() => supabase.auth.signOut()} >
-                            <Title16>Esci</Title16>
-                        </Button>
-                    </ButtonContainerSE>
+                    <View style={[styles.verticallySpaced, styles.mt20]}>
+                        <Button
+                            onPress={() => updateProfile({ username, website, avatar_url: avatarUrl })}
+                            title={loading ? "Loading ..." : "Update"}
+                        />
+                        <Button
+                            onPress={async () => {
+                                await supabase.auth.signOut();
+                                navigation.replace('Login'); // Naviga verso la schermata di accesso dopo il logout
+                            }}
+                            title="Esci"
+                        />
+                    </View>
                 </View>
             )}
-        </Layout>
+        </>
     );
 }
 
@@ -151,5 +177,10 @@ const styles = StyleSheet.create({
     },
     mt20: {
         marginTop: 20,
+    },
+    input: {
+        borderWidth: 1,
+        padding: 10,
+        borderRadius: 5,
     },
 });

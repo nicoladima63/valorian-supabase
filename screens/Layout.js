@@ -1,22 +1,27 @@
 import React from 'react';
-import { View,  StyleSheet } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import TopBar from '../components/TopBar';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import {
-    SafeAreaView, LayoutView
-} from '../styledComponents';
-const Layout = ({ children, navigation, showTopBar = true }) => {
+import { View, TouchableOpacity, Text } from 'react-native';
+import TopBar from '../components/TopBar';
+import { Ionicons } from '@expo/vector-icons';
+
+const Layout = ({ children, navigation, showTopBar }) => {
+    const { session } = useAuth();
     const { theme } = useTheme();
 
+    const navigateToSettings = () => {
+        navigation.navigate('Settings');
+    };
+
+
+
     return (
-        <SafeAreaView >
-            <StatusBar barStyle={theme.statusBarStyle} />
+        <View style={theme.container}>
             {showTopBar && <TopBar navigation={navigation} />}
-            <LayoutView>
+            <View style={theme.content}>
                 {children}
-            </LayoutView>
-        </SafeAreaView>
+            </View>
+        </View>
     );
 };
 

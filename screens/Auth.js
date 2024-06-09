@@ -1,24 +1,39 @@
 import React, { useState } from 'react';
-import { Alert, StyleSheet, View, AppState, Text } from 'react-native';
+import { Alert, StyleSheet, View, Text } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Button, Input, Icon } from '@rneui/themed';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import Background from '../components/Background';
-import {
-    Title
 
-} from '../styledComponents'
-
-export default function Auth({ navigation }) {
+export default function Auth() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [emailError, setEmailError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
     const route = useRoute();
-    //const { isNewUser } = route.params;
-    const { isNewUser} = route.params ;
+    const isNewUser = route.params;
+    const navigation = useNavigation();
+
+    function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+
+    function validatePassword(password) {
+        return password.length >= 6;
+    }
 
     async function signInWithEmail() {
+        if (!validateEmail(email)) {
+            setEmailError('Inserisci un indirizzo email valido.');
+            return;
+        }
+        if (!validatePassword(password)) {
+            setPasswordError('La password deve essere di almeno 6 caratteri.');
+            return;
+        }
+
         setLoading(true);
         const { error } = await supabase.auth.signInWithPassword({
             email: email,
@@ -28,14 +43,21 @@ export default function Auth({ navigation }) {
         if (error) {
             Alert.alert(error.message);
         } else {
-            // Torna indietro alla schermata precedente
             navigation.replace('Home');
-            //navigation.replace('Welcome');
         }
         setLoading(false);
     }
 
     async function signUpWithEmail() {
+        if (!validateEmail(email)) {
+            setEmailError('Inserisci un indirizzo email valido.');
+            return;
+        }
+        if (!validatePassword(password)) {
+            setPasswordError('La password deve essere di almeno 6 caratteri.');
+            return;
+        }
+
         setLoading(true);
         const { data: { session }, error } = await supabase.auth.signUp({
             email: email,
@@ -49,63 +71,74 @@ export default function Auth({ navigation }) {
                 Alert.alert('Controlla la tua email per verificare il tuo account!');
                 navigation.replace('Welcome');
             } else {
-                // Torna indietro alla schermata precedente
                 navigation.replace('Home');
-                //navigation.replace('Welcome');
-
             }
         }
         setLoading(false);
     }
 
     return (
-        <Background>
-            <View style={styles.container}>
-                <Title>{isNewUser ? 'Nuovo Account' : 'Login'}</Title>
-                <View style={[styles.verticallySpaced, styles.mt20]}>
-                    <Input style={styles.input}
-                        label="Email"
-                        leftIcon={{ type: 'font-awesome', name: 'envelope' }}
-                        onChangeText={(text) => setEmail(text)}
-                        value={email}
-                        placeholder="email@address.com"
-                        autoCapitalize={'none'}
-                    />
-                </View>
-                <View style={styles.verticallySpaced}>
-                    <Input style={styles.input}
-                        label="Password"
-                        leftIcon={{ type: 'font-awesome', name: 'lock' }}
-                        rightIcon={
-                            <Icon
-                                type='font-awesome'
-                                name={showPassword ? 'eye' : 'eye-slash'}
-                                onPress={() => setShowPassword(!showPassword)}
-                            />
-                        }
-                        onChangeText={(text) => setPassword(text)}
-                        value={password}
-                        secureTextEntry={!showPassword}
-                        placeholder="Password"
-                        autoCapitalize={'none'}
-                    />
-                </View>
-                <View style={[styles.verticallySpaced, styles.mt20]}>
-                    {isNewUser ? (
-                        <Button title="Sign up" onPress={signUpWithEmail} loading={loading} />
-                    ) : (
-                        <Button title="Sign in" onPress={signInWithEmail} loading={loading} />
-                    )}
-                </View>
+        <View style={styles.container}>
+            <Text style={styles.title}>{isNewUser ? 'Nuovo Account' : 'Login'}</Text>
+            <View style={[styles.verticallySpaced, styles.mt20]}>
+                <Input
+                    style={styles.input}
+                    label="Email"
+                    leftIcon={{ type: 'font-awesome', name: 'envelope' }}
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={(text) => {
+                        setEmail(text);
+                        setEmailError('');
+                    }}
+                    placeholder="email@address.com"
+                    autoCapitalize={'none'}
+                    errorMessage={emailError}
+                />
             </View>
-        </Background>
+            <View style={[styles.verticallySpaced, styles.mt20]}>
+                <Input
+                    style={styles.input}
+                    label="Password"
+                    leftIcon={{ type: 'font-awesome', name: 'lock' }}
+                    placeholder="Password"
+                    rightIcon={
+                        <Icon
+                            type='font-awesome'
+                            name={showPassword ? 'eye' : 'eye-slash'}
+                            onPress={() => setShowPassword(!showPassword)}
+                        />
+                    }
+                    value={password}
+                    onChangeText={(text) => {
+                        setPassword(text);
+                        setPasswordError('');
+                    }}
+                    secureTextEntry={!showPassword}
+                    placeholder="Password"
+                    autoCapitalize={'none'}
+                    errorMessage={passwordError}
+                />
+            </View>
+            <Button
+                buttonStyle={{ width: 250, padding: 15 }}
+                containerStyle={{ margin: 5 }}
+                loading={loading}
+                titleStyle={{ marginHorizontal: 5, fontSize: 20 }}
+                title={isNewUser ? 'Registrati' : 'Accedi'}
+                onPress={isNewUser ? signUpWithEmail : signInWithEmail}
+                disabled={loading}
+            />
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 40,
-        padding: 12,
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
     },
     title: {
         fontSize: 24,
@@ -121,7 +154,17 @@ const styles = StyleSheet.create({
     mt20: {
         marginTop: 20,
     },
-    input: {
-        color: 'grey',
+    inputx: {
+        width: '80%',
+        padding: 10,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
     },
+    button: {
+        width: 150,
+        marginTop: 20,
+        padding: 30
+    }
 });

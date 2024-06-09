@@ -5,13 +5,6 @@ import ExternalLink from '../components/ExternalLink'
 
 import axios from 'axios'
 
-// Import components
-//import { bisogniList } from '@/components/bisogni-list'
-
-// Import styles
-//import '@/styles/bisogni.css'
-
-// Create bisogni component
 export default function bisogni() {
     // Prepare states
     const [nome, setNome] = useState('')
@@ -37,7 +30,9 @@ export default function bisogni() {
                 // Update loading state
                 setLoading(false)
             })
-            .catch(error => console.error(`There was an error retrieving the bisogno list: ${error}`))
+            .catch(
+                error => console.error(`There was an error retrieving the bisogno list: ${error}`)
+            )
     }
 
     // Reset all input fields

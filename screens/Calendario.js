@@ -1,40 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase'; // Assicurati che questa importazione sia corretta
-import { View, Text, StyleSheet, Button, Alert } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import * as Controller from '../controllers/bisogniController';
+
+import { ScrollView, RefreshControl, View, Text, StyleSheet, Button, Alert } from 'react-native';
 import { Calendar } from 'react-native-big-calendar';
 import 'dayjs/locale/it';
 import dayjs from 'dayjs';
 import Layout from './Layout';
 
-
-export default function CalendarPage({ navigation}) {
+export default function CalendarPage({ navigation }) {
     const [bisogni, setBisogni] = useState([]);
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
-        fetchBisogni();
+        loadBisogni();
     }, []);
 
-    const fetchBisogni = async () => {
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        fetchBisogni().then(() => {
+            setRefreshing(false);
+        });
+    }, []);
+
+    const loadBisogni = async () => {
         try {
-            const { data, error } = await supabase
-                .from('bisogni')
-                .select('*');
-            if (error) {
-                throw error;
-            }
-            if (data) {
-                setBisogni(data);
-                console.log(data);
-            }
+            const data = await Controller.getBisogni();
+            setBisogni(data);
         } catch (error) {
-            console.error('Errore nel recupero dei bisogni', error);
-            Alert.alert('Errore nel recupero dei bisogni');
+            console.error(error);
         }
-    };
+    }
+
     const handlePrevMonth = () => {
         setCurrentDate(dayjs(currentDate).subtract(1, 'month').toDate());
     };
+
     const handleNextMonth = () => {
         setCurrentDate(dayjs(currentDate).add(1, 'month').toDate());
     };
@@ -46,15 +47,17 @@ export default function CalendarPage({ navigation}) {
             handlePrevMonth();
         }
     };
+
     const renderHeader = (date) => {
         const monthName = date.toLocaleString('default', { month: 'long' });
         const year = date.getFullYear();
         return (
-            <View style={styles.headerContainer}>
+            <View>
                 <Text style={styles.headerText}>{monthName} {year}</Text>
             </View>
         );
     };
+
     const transformBisogniToEvents = () => {
         return bisogni.map(bisogno => ({
             title: bisogno.nome,
@@ -75,22 +78,30 @@ export default function CalendarPage({ navigation}) {
     };
 
     return (
-        <Layout navigation={navigation}>
-        <View style={styles.container}>
-            <Calendar
-                events={events}
-                height={600}  // Altezza del calendario
-                mode="month"  // Modalità di visualizzazione mensile
-                locale="it"
-                weekStartsOn={1}  // Imposta il primo giorno della settimana a lunedì
-                eventCellStyle={eventCellStyle} // Applica lo stile personalizzato agli eventi
-                currentDate={currentDate}
-                onSwipeHorizontal={handleSwipe} // Gestisce lo swipe orizzontale
-                // theme={darkTheme}  // Opzionale: tema scuro
-                cellHeight={100}
-                renderHeader={renderHeader}
-            />
-        </View>
+        <Layout navigation={navigation} showTopBar={true}>
+            <ScrollView
+                style={styles.container}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                    />
+                }
+            >
+                <Calendar
+                    events={events}
+                    height={600}  // Altezza del calendario
+                    mode="month"  // Modalità di visualizzazione mensile
+                    locale="it"
+                    weekStartsOn={1}  // Imposta il primo giorno della settimana a lunedì
+                    eventCellStyle={eventCellStyle} // Applica lo stile personalizzato agli eventi
+                    currentDate={currentDate}
+                    onSwipeHorizontal={handleSwipe} // Gestisce lo swipe orizzontale
+                    // theme={darkTheme}  // Opzionale: tema scuro
+                    cellHeight={100}
+                    renderHeader={renderHeader}
+                />
+            </ScrollView>
         </Layout>
     );
 };
@@ -107,6 +118,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f0f0f0',
     },
     headerText: {
-        fontSize: 18,
+        fontSize: 28,
+        color: 'black',
     },
 });
